@@ -3,8 +3,7 @@
    [clojure.java.io :as io]
    [clojure.string :as str]])
 
-(defn who-is-carrying-the-most? 
-  [dataset]
+(defn sorted-sums [dataset]
   (->> dataset
        (map #(reduce + %))
        
@@ -15,9 +14,19 @@
           (fn [arr]
             (-> arr
                 second
-                (* -1))) %))
-       
-       first))
+                (* -1))) %))))
+
+(defn who-is-carrying-the-most? 
+  [dataset]
+  (first (sorted-sums dataset)))
+
+(defn how-many-calories-carried-by-top-3?
+  [dataset]
+  (->> dataset
+       sorted-sums
+       (take 3)
+       (map second)
+       (reduce +)))
 
 (defn lines->elves
   [lines]
@@ -38,7 +47,7 @@
              (conj current-elf (Integer/parseInt current-line))
              elves))))
 
-(defn run 
+(defn run-part1 
   []
   (-> (slurp (io/resource "day1/dataset.txt"))
       str/split-lines
@@ -46,4 +55,14 @@
       who-is-carrying-the-most?))
 
 (comment
-  (run))
+  (run-part1))
+
+(defn run-part2
+  []
+  (-> (slurp (io/resource "day1/dataset.txt"))
+      str/split-lines
+      lines->elves
+      how-many-calories-carried-by-top-3?))
+
+(comment 
+  (run-part2))
