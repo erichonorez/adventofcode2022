@@ -1,59 +1,93 @@
 (ns adventofcode2022.day2
-  [:require 
+  [:require
    [clojure.java.io :as io]
    [clojure.string :as str]])
 
-(defn round-score
-  [a b]
-  (case [a b]
-    [:rock :paper] 6
-    [:paper :scissor] 6
-    [:scissor :rock] 6
-    [:scissor :scissor] 3
-    [:paper :paper] 3
-    [:rock :rock] 3
-    0))
-
-(def shape-score {:rock 1
-                  :paper 2
-                  :scissor 3})
-
-(defn mapping
-  [x]
-  (case x
-    (:a :x) :rock
-    (:b :y) :paper
-    (:c :z) :scissor))
+;; PART 1
 
 (defn decrypt
   [x]
-  (->> x
-       str/lower-case
-       keyword
-       (mapping)))
+  (condp some [x]
+    #{:A :X} :rock
+    #{:B :Y} :paper
+    #{:C :Z} :scissor))
 
 (defn round
   [opponent me]
-  (+ (round-score opponent me)
-     (get shape-score me)))
+  (case [opponent me]
+    [:rock :scissor] :lose
+    [:scissor :paper] :lose
+    [:paper :rock] :lose
+    (if (= opponent me)
+      :draw
+      :win)))
 
-(defn total-score
+(def outcome-score
+  {:win 6
+   :draw 3
+   :lose 0})
+
+(def shape-score
+  {:rock 1
+   :paper 2
+   :scissor 3})
+
+(defn round-score
+  [shape outcome]
+  (+ (shape shape-score)
+     (outcome outcome-score)))
+
+(defn run-round
+  [opponent me]
+  (->> (round opponent me)
+       (#(round-score me %))))
+
+(defn run-all-rounds
   [strategies]
   (->> strategies
-       (map (fn [[x y]] (round x y)))
+       (map #(apply run-round %))
        (reduce +)))
 
-(defn str->strategy
+(defn line->strategy
   [line]
-  (->> line 
+  (->> line
        (#(str/split % #" "))
+       (map keyword)
        (map decrypt)))
 
-(defn run
+(defn day2-part1
   []
-  (->> (slurp (io/resource "day2/dataset.txt"))
+  (->> (slurp "resources/day2/dataset.txt")
        str/split-lines
-       (map str->strategy)
-       total-score))
+       (map line->strategy)
+       run-all-rounds))
 
-(run)
+(comment (day2-part1))
+
+;; PART 2
+
+(defn shape-to-play
+  [outcome opponent-shape]
+  (case [outcome opponent-shape]
+    [:win :scissor] :rock
+    [:win :rock] :paper
+    [:win :paper] :scissor
+    [:lose :scissor] :paper
+    [:lose :rock] :scissor
+    [:lose :paper] :rock
+    opponent-shape))
+
+(def str->outcome
+  {"X" :lose
+   "Y" :draw
+   "Z" :win})
+
+(->> ["A Y"
+      "B X"
+      "C Z"]
+     (map #(str/split % #" "))
+     (map (fn [line]
+            (let [opponent-share (decrypt (keyword (first line)))]
+              [opponent-share
+               (shape-to-play (get str->outcome (second line))
+                              opponent-share)]))))

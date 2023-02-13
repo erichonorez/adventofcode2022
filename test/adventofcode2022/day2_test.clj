@@ -1,13 +1,11 @@
 (ns adventofcode2022.day2-test
   [:require
    [clojure.test :refer [deftest testing is]]
-   [adventofcode2022.day2 :refer [total-score]]])
+   [adventofcode2022.day2 :refer [run-all-rounds]]])
 
-(def strategies [[1 2]
-                 [2 1]
-                 [3 3]])
-
-(deftest day2-test
-  (testing "total-score"
-    (is (= (total-score strategies)
+(deftest day2-tests
+  (testing "example"
+    (is (= (run-all-rounds [[:A :Y]
+                            [:B :X]
+                            [:C :Z]])
            15))))
