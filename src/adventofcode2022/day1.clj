@@ -6,17 +6,17 @@
 (defn sorted-sums [dataset]
   (->> dataset
        (map #(reduce + %))
-       
+
        (#(for [x (range (count dataset))]
            [(inc x) (nth % x)]))
-       
+
        (#(sort-by
           (fn [arr]
             (-> arr
                 second
                 (* -1))) %))))
 
-(defn who-is-carrying-the-most? 
+(defn who-is-carrying-the-most?
   [dataset]
   (first (sorted-sums dataset)))
 
@@ -47,7 +47,7 @@
              (conj current-elf (Integer/parseInt current-line))
              elves))))
 
-(defn run-part1 
+(defn run-part1
   []
   (-> (slurp (io/resource "day1/dataset.txt"))
       str/split-lines
@@ -64,5 +64,5 @@
       lines->elves
       how-many-calories-carried-by-top-3?))
 
-(comment 
+(comment
   (run-part2))
