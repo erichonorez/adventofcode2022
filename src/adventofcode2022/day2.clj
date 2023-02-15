@@ -82,12 +82,19 @@
    "Y" :draw
    "Z" :win})
 
-(->> ["A Y"
-      "B X"
-      "C Z"]
-     (map #(str/split % #" "))
-     (map (fn [line]
-            (let [opponent-share (decrypt (keyword (first line)))]
-              [opponent-share
-               (shape-to-play (get str->outcome (second line))
-                              opponent-share)]))))
+(defn line->alt-strategy
+  [s]
+  (let [line (str/split s #" ")
+        opponent-share (decrypt (keyword (first line)))]
+    [opponent-share
+     (shape-to-play (get str->outcome (second line))
+                    opponent-share)]))
+
+(defn day2-part2
+  []
+  (->> (slurp "resources/day2/dataset.txt")
+       str/split-lines
+       (map line->alt-strategy)
+       run-all-rounds))
+
+(day2-part2)
