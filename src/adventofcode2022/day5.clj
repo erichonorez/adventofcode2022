@@ -1,45 +1,27 @@
 (ns adventofcode2022.day5
   (:require [clojure.string :as str]))
 
-(defn move
-  "Move one crate from a to b"
-  ([coll a b]
-   (let [a' (dec a)
-         b' (dec b)
-         from  (nth coll a')
-         to    (nth coll b')
-         from' (pop from)
-         to'   (conj to (peek from))]
-     (-> (assoc coll a' from')
-         (assoc b' to'))))
-  ([coll a b n]
-   (if (= 0 n)
-     coll
-     (move (move coll a b) a b (dec n)))))
-
-(defn move'
-  "Move one crate from a to b"
-  ([coll a b n]
-   (let [a'    (dec a)
-         b'    (dec b)
-         from  (nth coll a')
-         to    (nth coll b')
-         from' (vec (drop-last n from))
-         to'   (into to (vec (take-last n from)))]
-     (-> (assoc coll a' from')
-         (assoc b' to')))))
+(defn move''
+  "Move x elements from arr at idx a - 1 to arr at idx b - 1, one a time or all in bulk"
+  [coll mode a b x]
+  (let [a' (dec a)
+        b' (dec b)
+        els (cond-> (take x (get coll a'))
+              (= :bulk mode) reverse)]
+    (-> (update coll b' (fn [xs] (apply conj xs els)))
+        (update a' (fn [xs] (drop x xs))))))
 
 (defn apply-moves
-  [move-fn stacks moves]
+  [stacks moves mode]
   (loop [stacks stacks
          [current-move & rest] moves]
     (if (nil? current-move)
       stacks
-      (recur (apply move-fn stacks current-move) rest))))
+      (recur (apply move'' stacks mode current-move) rest))))
 
 (defn top-crates
   [coll]
-  (map peek coll))
+  (map first coll))
 
 (defn- letter?
   []
@@ -52,10 +34,7 @@
        (map (fn [coll]
               (filter (letter?)
                       coll)))
-       (#(take width (concat % (repeat '()))))
-       (map vec)))
-
-(row->coll "[Z] [M] [P]" 3)
+       (#(take width (concat % (repeat '()))))))
 
 (defn rows->stacks
   [coll width]
@@ -63,7 +42,6 @@
        (apply map vector)
        (map flatten)
        (map reverse)
-       (map vec)
        vec))
 
 (defn parse-stacks
@@ -87,27 +65,16 @@
   (->> (str/split-lines s)
        (map s->move)))
 
-(defn part1
-  [filename]
+(defn run
+  [filename mode]
   (let [file                (slurp filename)
         [fst-part snd-part] (str/split file #"\n\n")
         stacks              (parse-stacks fst-part)
         moves               (parse-moves snd-part)]
-    (->> (apply-moves move stacks moves)
-         top-crates
-          (apply str))))
-
-;; VRWBSFZWM
-(part1 "resources/day5/part1.txt")
-
-(defn part2
-  [filename]
-  (let [file                (slurp filename)
-        [fst-part snd-part] (str/split file #"\n\n")
-        stacks              (parse-stacks fst-part)
-        moves               (parse-moves snd-part)]
-    (->> (apply-moves move' stacks moves)
+    (->> (apply-moves stacks moves mode)
          top-crates
          (apply str))))
 
-(part2 "resources/day5/part1.txt")
+;; VRWBSFZWM
+(run "resources/day5/part1.txt" :aot)
+(run "resources/day5/part1.txt" :bulk)
